@@ -37,31 +37,44 @@ def draw_tracking_box(frame, H, template_shape):
     cv2.polylines(frame_with_box, [np.int32(transformed_corners)], True, (0, 255, 0), 2)
     return frame_with_box
 
-video_path = "videos/mona-lisa.avi"
-cap = cv2.VideoCapture(video_path)
-ret, template_frame = cap.read()
-
-kp1, desc1 = get_keypoints_descriptors(template_frame)
-print(f"Найдено ключевых точек на первом кадре: {len(kp1)}")
-
 while True:
-    ret, current_frame = cap.read()
-    kp2, desc2 = get_keypoints_descriptors(current_frame)
-    if desc1 is not None and desc2 is not None:
-        matches = match_keypoints(desc1, desc2)
+    print("Введите номер желаемого видео:")
+    print("1: mona-lisa.avi")
+    print("2: mona-lisa-blur.avi")
+    print("3: mona-lisa-blur-extra-credit.avi")
+    print("4: our-video.avi")
+    video_num = int(input())
+    if video_num == 1:
+        video_path = "videos/mona-lisa.avi"
+    elif video_num == 2:
+        video_path = "videos/mona-lisa-blur.avi"
+    elif video_num == 3:
+        video_path = "videos/mona-lisa-blur-extra-credit.avi"
+    else:
+        video_path = "videos/our-video.mp4"
 
-        if len(matches) > 10:
-            H = find_homography(kp1, kp2, matches[:50])
-            result_frame = draw_tracking_box(current_frame, H, template_frame.shape)
-            matches_img = cv2.drawMatches(template_frame, kp1, result_frame, kp2, matches[:50], None, flags=2)
-            cv2.imshow("Соответствия ключевых точек", matches_img)
-        else:
-            result_frame = current_frame
-            cv2.imshow("Соответствия ключевых точек", current_frame)
+    cap = cv2.VideoCapture(video_path)
+    ret, template_frame = cap.read()
+    kp1, desc1 = get_keypoints_descriptors(template_frame)
 
-    cv2.imshow("Трекинг объекта", result_frame if 'result_frame' in locals() else current_frame)
-    if cv2.waitKey(30) & 0xFF == ord('q'):
-        break
+    while True:
+        ret, current_frame = cap.read()
+        kp2, desc2 = get_keypoints_descriptors(current_frame)
+        if desc1 is not None and desc2 is not None:
+            matches = match_keypoints(desc1, desc2)
+
+            if len(matches) > 10:
+                H = find_homography(kp1, kp2, matches[:50])
+                result_frame = draw_tracking_box(current_frame, H, template_frame.shape)
+                matches_img = cv2.drawMatches(template_frame, kp1, result_frame, kp2, matches[:50], None, flags=2)
+                cv2.imshow("Соответствия ключевых точек", matches_img)
+            else:
+                result_frame = current_frame
+                cv2.imshow("Соответствия ключевых точек", current_frame)
+
+        cv2.imshow("Трекинг объекта", result_frame if 'result_frame' in locals() else current_frame)
+        if cv2.waitKey(30) & 0xFF == ord('q'):
+            break
 
 cap.release()
 cv2.destroyAllWindows()
